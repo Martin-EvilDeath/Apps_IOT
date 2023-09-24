@@ -5,29 +5,21 @@
 const char *ssid = "BLACKPINK";
 const char *password = "itcolima6";
 
-// Your Domain name with URL path or IP address with path
-String serverName = "http://192.168.0.100:7800/";
+String serverName = "http://192.168.0.101:7800/";
 
-// the following variables are unsigned longs because the time, measured in
-// milliseconds, will quickly become a bigger number than can be stored in an int.
 unsigned long lastTime = 0;
-// Timer set to 10 minutes (600000)
-// unsigned long timerDelay = 600000;
-// Set timer to 5 seconds (5000)
 unsigned long timerDelay = 5000;
+
+int quantity = 0; // Variable para almacenar la cantidad
 
 void post_data(String action, int quantity)
 {
-  // Objeto JSON
   DynamicJsonDocument json_chido(1024);
   json_chido["action"] = action;
   json_chido["quantity"] = quantity;
-
-  // Cadena JSON para enviar
   String json_str;
   serializeJson(json_chido, json_str);
 
-  // Enviar POST
   HTTPClient http;
   http.begin(serverName);
   http.addHeader("Content-Type", "application/json");
@@ -39,16 +31,6 @@ void post_data(String action, int quantity)
     Serial.println(httpResponseCode);
     String payload = http.getString();
     Serial.println(payload);
-
-    if (payload == "True")
-    {
-      digitalWrite(D16, HIGH); // Encender el LED
-    }
-    else if (payload == "False")
-    {
-      digitalWrite(D16, LOW); // Apagar el LED
-    }
-
   }
   else
   {
@@ -59,22 +41,9 @@ void post_data(String action, int quantity)
   http.end();
 }
 
-void post_asc()
-{
-  post_data("asc", 1);
-}
-
-void post_desc()
-{
-  post_data("desc", 1);
-}
-
 void setup()
 {
   Serial.begin(115200);
-
-  pinMode(D16, OUTPUT);
-  digitalWrite(D16, LOW); // Inicialmente apagar el LED
 
   WiFi.begin(ssid, password);
   Serial.println("Connecting");
@@ -87,44 +56,46 @@ void setup()
   Serial.print("Connected to WiFi network with IP Address: ");
   Serial.println(WiFi.localIP());
 
+  pinMode(D2, INPUT_PULLUP);
+  pinMode(D4, INPUT_PULLUP);
+  pinMode(D16, OUTPUT);
+  pinMode(D17, OUTPUT);
+
+
   Serial.println("Timer set to 5 seconds (timerDelay variable), it will take 5 seconds before publishing the first reading.");
 }
 
 void loop()
 {
-  if (Serial.available())
+  int buttonState = digitalRead(D2);
+
+  if (buttonState == LOW)
   {
-    String data = Serial.readStringUntil('\n');
-    if (data == "+")
-    {
-      post_asc();
-    }
-    else if (data == "-")
-    {
-      post_desc();
-    }
-    else
-    {
-      Serial.println("Invalid command");
-    }
+    quantity++;
+    digitalWrite(D16, HIGH); // Enciende el primer LED
+    delay(100); // Pequeña pausa para evitar múltiples incrementos por un solo botón presionado
+    digitalWrite(D16, LOW);  // Apaga el primer LED
+    post_data("inc", quantity);
   }
-  // Send an HTTP POST request every 10 minutes
+
+  buttonState = digitalRead(D4);
+
+  if (buttonState == LOW)
+  {
+    quantity--;
+    digitalWrite(D17, HIGH); // Enciende el segundo LED
+    delay(100); // Pequeña pausa para evitar múltiples decrementos por un solo botón presionado
+    digitalWrite(D17, LOW);  // Apaga el segundo LED
+    post_data("dec", quantity);
+  }
+
   if ((millis() - lastTime) > timerDelay)
   {
-    // Check WiFi connection status
     if (WiFi.status() == WL_CONNECTED)
     {
       HTTPClient http;
-
       String serverPath = serverName;
-
-      // Your Domain name with URL path or IP address with path
       http.begin(serverPath.c_str());
-
-      // If you need Node-RED/server authentication, insert user and password below
-      // http.setAuthorization("REPLACE_WITH_SERVER_USERNAME", "REPLACE_WITH_SERVER_PASSWORD");
-
-      // Send HTTP GET request
       int httpResponseCode = http.GET();
 
       if (httpResponseCode > 0)
@@ -139,7 +110,6 @@ void loop()
         Serial.print("Error code: ");
         Serial.println(httpResponseCode);
       }
-      // Free resources
       http.end();
     }
     else
