@@ -25,7 +25,7 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
       try:
         # Get the absolute path to the HTML file
         self._set_response(content_type="text/html")
-        html_file_path = os.path.abspath("Unidad 2\index.html")
+        html_file_path = os.path.abspath("Unidad2\index.html")
         with open(html_file_path, "r", encoding="utf-8") as file_to_open:
           # Write the HTML content to the response
           self.wfile.write(file_to_open.read().encode())
