@@ -1,0 +1,3 @@
+CTRL+C en terminal pausa el servidor
+
+copy relative path para sustituir en la linea 78 la direccion del certificado ssl
