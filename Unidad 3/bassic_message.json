@@ -7,3 +7,7 @@
        "humidity":"55" 
     }
 }
+
+{   "from":"ESP",
+    "to":"Jisoo",
+    "action":"GET_DATA", }

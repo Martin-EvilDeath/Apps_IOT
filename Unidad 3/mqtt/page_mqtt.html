@@ -10,6 +10,16 @@
   </head>
   <body>
     <h1>MQTT CON JS</h1>
+    <button
+    id="toggle"
+    class="led_on">
+      Apagar Led
+    </button>
+    <button 
+      id="fetch_data"
+      class="led_on">
+        Extraer Datos
+    </button>
     <input
       type="text"
       id="msgMQTT"
@@ -18,15 +28,27 @@
   </body>
   <script src="mqtt.js"></script>
   <script>
+    let PUB_TOPIC = "monitores/YG";
     let msgMQTT = document.getElementById("msgMQTT");
     let output_console = document.getElementById("output_console");
     msgMQTT.addEventListener("keyup", (e) => {
       if (e.keyCode === 13) {
         console.log("Sending:", msgMQTT.value);
-        client.publish("test", msgMQTT.value);
+        client.publish(PUB_TOPIC, msgMQTT.value);
         msgMQTT.value = "";
       }
     });
+
+    document.getElementById("fetch_data").addEventListener("click", (e) =>{
+      client.publish(
+        PUB_TOPIC,
+        JSON.stringify({
+          from: "ESP",
+          to: "Jisoo",
+          action: "GET_DATA",
+        })
+      )
+    })
     /***
      * Browser
      * This document explains how to use MQTT over WebSocket with the ws and wss protocols.
@@ -51,17 +73,17 @@
     client.on("connect", function () {
       console.log("Connected");
       // Subscribe to a topic
-      client.subscribe("test", function (err) {
+      client.subscribe(PUB_TOPIC, function (err) {
         if (!err) {
           // Publish a message to a topic
           console.log("Message is published");
-          client.publish("test", "Hello mqtt from js");
+          client.publish(PUB_TOPIC, "Bienvenido al Chat de YG Enterteiment");
         }
       });
     });
 
     // Receive messages
-    client.on("message", function (topic, message) {
+    client.on("message", function (PUB_TOPIC, message) {
       // message is Buffer
       output_console.innerHTML = message.toString() + "<br>" + output_console.innerHTML;
       // client.end();

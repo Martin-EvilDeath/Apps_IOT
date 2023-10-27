@@ -2,7 +2,7 @@ import sqlite3
 
 
 class DBStorage:
-    def __init__(self, db_name):
+    def __init__(self, db_name = "data.db"):
         self.db_name = db_name
         self.db = None
         self.cursor = None
