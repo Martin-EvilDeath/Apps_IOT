@@ -8,6 +8,7 @@ import time
 from db_storage import DBStorage
 
 from paho.mqtt import client as mqtt_client
+from datetime import datetime, timedelta
 
 BROKER = 'v3e23249.ala.us-east-1.emqxsl.com'
 PORT = 8883
@@ -25,7 +26,6 @@ MAX_RECONNECT_COUNT = 12
 MAX_RECONNECT_DELAY = 60
 
 FLAG_EXIT = True
-
 
 def on_connect(client, userdata, flags, rc):
     if rc == 0 and client.is_connected():
@@ -77,7 +77,7 @@ def on_message(client, userdata, msg):
         if "action" not in msg_dict:
             return
 
-        if msg_dict["action"] == "SEND_DATA":
+        if msg_dict["action"] == "SD":
             # verify if message has "data" key
             if "data" not in msg_dict:
                 return
@@ -101,12 +101,19 @@ def on_message(client, userdata, msg):
             db.disconnect()
         elif msg_dict["action"] == "GET_DATA":
             print("Obteniendo la data del server de YG")
+
+            # Calcula la fecha de inicio (hace una hora atrás desde la fecha actual)
+            fecha_inicio = datetime.now() - timedelta(hours=1)
+            
+            # La fecha final es la fecha actual
+            fecha_final = datetime.now()
+
             db = DBStorage()
             db.connect()
-            data = db.get_measurements()
+            data = db.get_measurements(fecha_inicio, fecha_final)
             db.disconnect()
-            print("Perfecto hemos logrado extraer los datos bancarios de YG")
-            msg_dict = {"action": "SEND_DATA", "data": data}
+            print("Perfecto hemos logrado extraer los datos de la última hora")
+            msg_dict = {"from": "server", "to": 'Jisoo', "action": "SD", "data": data}
             print("Miercoles creo que nos equivocamos y no son datos bancarios T_T")
             out_msg = json.dumps(msg_dict)
             client.publish(msg.topic, out_msg)
@@ -117,7 +124,7 @@ def on_message(client, userdata, msg):
 
 def connect_mqtt():
     client = mqtt_client.Client(CLIENT_ID)
-    client.tls_set(ca_certs='mqtt\emqxsl-ca.crt')
+    client.tls_set(ca_certs='Unidad 3\mqtt\emqxsl-ca.crt')
     client.username_pw_set(USERNAME, PASSWORD)
     client.on_connect = on_connect
     client.on_message = on_message

@@ -1,5 +1,5 @@
 {
-    "from":"ESP",
+    "from":"server",
     "to":"Jisoo",
     "action":"SD",
     "data":{
@@ -10,4 +10,5 @@
 
 {   "from":"ESP",
     "to":"Jisoo",
-    "action":"GET_DATA", }
+    "action":"GET_DATA", 
+}
