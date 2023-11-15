@@ -12,3 +12,14 @@
     "to":"Jisoo",
     "action":"GET_DATA", 
 }
+
+{   "from":"ESP32",
+    "to":"broadcast",
+    "action":"UPDATE_COUNTER", 
+    "value":1
+}
+
+{   "from":"server",
+    "to":"web",
+    "action":"GET_JOKE", 
+}

@@ -65,6 +65,8 @@
             type="text"
             id="msgMQTT"
         />
+
+        <p id="counter_display">Esperando......</p>
         <canvas
             id="line-chart"
             width="800"
@@ -141,7 +143,7 @@
                 PUB_TOPIC,
                 JSON.stringify({
                   from: "server",
-                  to: "Jisoo",
+                  to: "server",//web
                   action: "GET_DATA",
                 })
             );
@@ -162,8 +164,8 @@
             connectTimeout: 4000,
             // Authentication
             clientId: "emqxjs_" + Math.random().toString(16).substr(2, 8),
-            username: "Jisoo",
-            password: "BlackPink",
+            username: "web",
+            password: "web",
         };
 
         const client = mqtt.connect(url, options);
@@ -175,7 +177,13 @@
                 if (!err) {
                     // Publish a message to a topic
                     console.log("Message is published");
-                    client.publish(PUB_TOPIC, "Hello mqtt from js");
+
+                    const initialMessage = {
+                        from: "web",
+                        to: "server",
+                        action: "GET_JOKE"
+                    };
+                    client.publish(PUB_TOPIC, "Hello mqtt from js", JSON.stringify(initialMessage));
                 }
             });
         });
@@ -186,8 +194,10 @@
             output_console.innerHTML = message.toString() + "<br>" + output_console.innerHTML;
             try {
                 let data = JSON.parse(message.toString());
-                if (data["from"] == "server" && data["to"] == "Jisoo") {
+                if (data["from"] == "server" && data["to"] == "web") {
                     updateChart(data["data"]["labels"], data["data"]["temperatures"], data["data"]["humidities"]);
+                }else if(data['from'] == 'ESP32' && data['to'] == 'broadcast' && data['action'] == 'UPDATE_COUNTER'){
+                    document.getElementById('counter_display').innerHTML = data['value'];
                 }
             } catch (e) {
                 console.log("No es un JSON");

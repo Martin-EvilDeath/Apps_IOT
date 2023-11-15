@@ -1,5 +1,6 @@
 # python 3.6
 
+import requests
 import json
 import logging
 import random
@@ -17,8 +18,8 @@ TOPIC = "monitores/YG"
 
 # generate client ID with pub prefix randomly
 CLIENT_ID = f'python-mqtt-tls-pub-sub-{random.randint(0, 1000)}'
-USERNAME = 'Jisoo'
-PASSWORD = 'BlackPink'
+USERNAME = 'server'
+PASSWORD = 'server'
 
 FIRST_RECONNECT_DELAY = 1
 RECONNECT_RATE = 2
@@ -70,14 +71,14 @@ def on_message(client, userdata, msg):
             return
 
         # check if message is for me
-        if msg_dict['to'] != "Jisoo":
+        if msg_dict['to'] != "server":
             return
 
         # check if message has "action" key
         if "action" not in msg_dict:
             return
 
-        if msg_dict["action"] == "SD":
+        if msg_dict["action"] == "SEND_DATA":
             # verify if message has "data" key
             if "data" not in msg_dict:
                 return
@@ -99,6 +100,7 @@ def on_message(client, userdata, msg):
                       msg_dict["data"]["temperature"])
             print("Rose a guardado tus datos en la base de datos")
             db.disconnect()
+        
         elif msg_dict["action"] == "GET_DATA":
             print("Obteniendo la data del server de YG")
 
@@ -113,8 +115,29 @@ def on_message(client, userdata, msg):
             data = db.get_measurements(fecha_inicio, fecha_final)
             db.disconnect()
             print("Perfecto hemos logrado extraer los datos de la última hora")
-            msg_dict = {"from": "server", "to": 'Jisoo', "action": "SD", "data": data}
+            msg_dict = {"from":"server","to":"web","action":"SEND_DATA","data": data}
             print("Miercoles creo que nos equivocamos y no son datos bancarios T_T")
+            out_msg = json.dumps(msg_dict)
+            client.publish(msg.topic, out_msg)
+        
+        elif msg_dict["action"] == "GET_JOKE":
+            print("Obteniendo la Broma del server de Jokes")
+
+            url = "https://humor-jokes-and-memes.p.rapidapi.com/jokes/search"
+
+            querystring = {"exclude-tags":"nsfw","keywords":"rocket","min-rating":"7","include-tags":"one_liner","number":"3","max-length":"200"}
+
+            headers = {
+                "X-RapidAPI-Key": "cfd2abb8b9msh30bd50d80bc3141p1cd901jsnc18b6fbb4199",
+                "X-RapidAPI-Host": "humor-jokes-and-memes.p.rapidapi.com"
+            }
+
+            response = requests.get(url, headers=headers, params=querystring)
+
+            obj = response.json()
+
+            #print(obj['jokes'][0]['joke'])
+            msg_dict = {obj['jokes'][0]['joke']}
             out_msg = json.dumps(msg_dict)
             client.publish(msg.topic, out_msg)
 
@@ -136,7 +159,7 @@ def connect_mqtt():
 def publish(client):
     msg_count = 0
     while not FLAG_EXIT:
-        msg_dict = {'msg': msg_count, 'from': 'Jisoo', 'to': 'client'}
+        msg_dict = {'msg': msg_count, 'from': 'server', 'to': 'client'}
         msg = json.dumps(msg_dict)
         if not client.is_connected():
             logging.error("publish: MQTT client is not connected!")
