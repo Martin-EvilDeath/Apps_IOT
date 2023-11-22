@@ -19,7 +19,7 @@
     "value":1
 }
 
-{   "from":"server",
-    "to":"web",
+{   "from":"web",
+    "to":"server",
     "action":"GET_JOKE", 
 }

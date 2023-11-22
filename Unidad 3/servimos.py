@@ -121,25 +121,46 @@ def on_message(client, userdata, msg):
             client.publish(msg.topic, out_msg)
         
         elif msg_dict["action"] == "GET_JOKE":
-            print("Obteniendo la Broma del server de Jokes")
+            try:
+                url = "https://matchilling-chuck-norris-jokes-v1.p.rapidapi.com/jokes/random"
 
-            url = "https://humor-jokes-and-memes.p.rapidapi.com/jokes/search"
+                headers = {
+                    "accept": "application/json",
+                    "X-RapidAPI-Key": "cfd2abb8b9msh30bd50d80bc3141p1cd901jsnc18b6fbb4199",
+                    "X-RapidAPI-Host": "matchilling-chuck-norris-jokes-v1.p.rapidapi.com"
+                }
 
-            querystring = {"exclude-tags":"nsfw","keywords":"rocket","min-rating":"7","include-tags":"one_liner","number":"3","max-length":"200"}
+                # Realizar la solicitud a la API de chistes
+                response = requests.get(url, headers=headers)
+                response.raise_for_status()  # Lanza una excepción en caso de error HTTP
 
-            headers = {
-                "X-RapidAPI-Key": "cfd2abb8b9msh30bd50d80bc3141p1cd901jsnc18b6fbb4199",
-                "X-RapidAPI-Host": "humor-jokes-and-memes.p.rapidapi.com"
-            }
+                # Parsear la respuesta JSON
+                joke_data = response.json()
 
-            response = requests.get(url, headers=headers, params=querystring)
+                if response.status_code == 200:
+                    # Parsear la respuesta JSON
+                    joke_data = response.json()
 
-            obj = response.json()
+                    # Acceder al valor de la broma
+                    joke_value = joke_data['value']
 
-            #print(obj['jokes'][0]['joke'])
-            msg_dict = {obj['jokes'][0]['joke']}
-            out_msg = json.dumps(msg_dict)
-            client.publish(msg.topic, out_msg)
+                    # Imprimir la broma
+                    print(f"Broma: {joke_value}")
+                    # Crear un nuevo mensaje con el chiste
+                    joke_msg = {"from": "server", "to": "web", "action": "SEND_JOKE", "joke": joke_value}
+
+                    # Convertir el mensaje a formato JSON
+                    out_msg = json.dumps(joke_msg)
+
+                    # Publicar el chiste como mensaje MQTT
+                    client.publish(TOPIC, out_msg)
+                    print("Chiste enviado con éxito")
+                else:
+                    print(f"Error en la solicitud. Código de respuesta: {response.status_code}")
+                    print("No se recibieron chistes de la API")
+
+            except requests.exceptions.RequestException as e:
+                print(f"Error al obtener chiste: {e}")
 
     except Exception as e:
         print(e)

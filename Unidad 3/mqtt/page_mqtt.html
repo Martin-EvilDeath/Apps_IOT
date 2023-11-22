@@ -183,7 +183,7 @@
                         to: "server",
                         action: "GET_JOKE"
                     };
-                    client.publish(PUB_TOPIC, "Hello mqtt from js", JSON.stringify(initialMessage));
+                    client.publish(PUB_TOPIC, JSON.stringify(initialMessage));
                 }
             });
         });
@@ -194,13 +194,24 @@
             output_console.innerHTML = message.toString() + "<br>" + output_console.innerHTML;
             try {
                 let data = JSON.parse(message.toString());
+                console.log("Se pudo")
+                console.log(data['from'] == "server");
+                console.log(data['to'] == "web");
+                console.log(data['action'] == "SEND_JOKE");
+                if (data["from"] == "server" && data["to"] == "web" && data['action'] == 'SEND_JOKE') {
+                    console.log(data)
+                }
                 if (data["from"] == "server" && data["to"] == "web") {
                     updateChart(data["data"]["labels"], data["data"]["temperatures"], data["data"]["humidities"]);
-                }else if(data['from'] == 'ESP32' && data['to'] == 'broadcast' && data['action'] == 'UPDATE_COUNTER'){
-                    document.getElementById('counter_display').innerHTML = data['value'];
                 }
+                
+                if(data['from'] == 'ESP32' && data['to'] == 'broadcast' && data['action'] == 'UPDATE_COUNTER'){
+                    document.getElementById('counter_display').innerHTML = data['value'];
+                } 
+                
             } catch (e) {
                 console.log("No es un JSON");
+                console.log(message.toString());
             }
         });
     </script>
