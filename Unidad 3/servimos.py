@@ -134,17 +134,17 @@ def on_message(client, userdata, msg):
                 response = requests.get(url, headers=headers)
                 response.raise_for_status()  # Lanza una excepción en caso de error HTTP
 
-                # Parsear la respuesta JSON
-                joke_data = response.json()
+                # Parsamos la respuesta a un JSON
+                # joke_data = response.json()
 
                 if response.status_code == 200:
-                    # Parsear la respuesta JSON
+                    # pasamos la respuesta JSON
                     joke_data = response.json()
 
-                    # Acceder al valor de la broma
+                    # Accedemos al valor de la broma
                     joke_value = joke_data['value']
 
-                    # Imprimir la broma
+                    # Imprimimos la broma
                     print(f"Broma: {joke_value}")
                     # Crear un nuevo mensaje con el chiste
                     joke_msg = {"from": "server", "to": "web", "action": "SEND_JOKE", "joke": joke_value}

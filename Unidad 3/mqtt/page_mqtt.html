@@ -45,36 +45,95 @@
                 max-width: 80vw;
                 max-height: 80vh;
             }
+            body, html {
+                margin: 0;
+                padding: 0;
+                overflow: hidden;
+                height: 100%;
+            }
+
+            #background-container {
+                position: fixed;
+                width: 100%;
+                height: 100%;
+                z-index: -1;
+                background: url('aespa.jpg') no-repeat center center fixed;
+                background-size: cover;
+            }
+            
+            body {
+                overflow-y: auto; /* Añade scroll vertical */
+            }
+
+            #main-panel {
+                display: inline-block; /* Ajusta a tamaño de contenido interno */
+            }
+
+            .panel-container {
+                margin: 10px;
+                padding: 10px;
+                background-color: rgba(255, 255, 255, 0.8);
+                border-radius: 10px;
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+                display: inline-block; /* Ajusta a tamaño de contenido interno */
+            }
+
+            #joke-panel,
+            #title-panel,
+            #chart-chat-panel,
+            #chat-panel,
+            #data-panels,
+            #temperature-panel,
+            #humidity-panel,
+            #counter-panel,
+            #controls-panel {
+                margin-bottom: 10px;
+                padding: 10px;
+                background-color: rgba(255, 255, 255, 0.8);
+                border-radius: 10px;
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            }
         </style>
     </head>
     <body>
-        <h1>MQTT CON JS</h1>
-        <button
-            id="toggle"
-            class="led_on"
-        >
-            Apagar led
-        </button>
-        <button
-            id="fetch_data"
-            class="led_on"
-        >
-            Solicitar datos históricos
-        </button>
-        <input
-            type="text"
-            id="msgMQTT"
-        />
-
-        <p id="counter_display">Esperando......</p>
-        <canvas
-            id="line-chart"
-            width="800"
-            height="450"
-        ></canvas>
-
-        <p id="output_console"></p>
-        <!-- Toggle button for sending JSON -->
+        <div id="background-container"></div>
+        <div id="main-panel">
+            <h1 id="title-panel">BlackPink Panel</h1>
+            <div id="joke-panel">
+                <p id="joke_display">Esperando broma...</p>
+            </div>
+            <div id="controls-panel" style="display: flex; justify-content: space-around;">
+                <button id="toggle" class="led_on">Apagar led</button>
+                <button id="fetch_data" class="led_on">Solicitar datos históricos</button>
+            </div>
+            <div id="data-panels" style="display: flex; justify-content: space-around;">
+                <div id="temperature-panel">
+                    <h2>Temperatura</h2>
+                    <p id="temperature_display">°C</p>
+                    <!-- Agrega contenido relacionado con la temperatura aquí -->
+                </div>
+                <div id="humidity-panel">
+                    <h2>Humedad</h2>
+                    <p id="humedad_display">%</p>
+                    <!-- Agrega contenido relacionado con la humedad aquí -->
+                </div>
+                <div id="counter-panel">
+                    <h2>Contador</h2>
+                    <p id="counter_display">Esperando...</p>
+                </div>
+            </div>
+            <div id="chart-chat-panel" style="display: flex; justify-content: center;">
+                <div id="chart-panel">
+                    <h2>Grafica de Temperatura y Humedad</h2>
+                    <canvas id="line-chart" width="800" height="450"></canvas>
+                </div>
+            </div>
+            <div id="chat-panel">
+                <h2>Chat</h2>
+                <input type="text" id="msgMQTT" style="display: flex; justify-content: center;"/>
+                <p id="output_console"></p>
+            </div>
+        </div>
     </body>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script>
@@ -198,13 +257,23 @@
                 console.log(data['from'] == "server");
                 console.log(data['to'] == "web");
                 console.log(data['action'] == "SEND_JOKE");
-                if (data["from"] == "server" && data["to"] == "web" && data['action'] == 'SEND_JOKE') {
-                    console.log(data)
-                }
                 if (data["from"] == "server" && data["to"] == "web") {
-                    updateChart(data["data"]["labels"], data["data"]["temperatures"], data["data"]["humidities"]);
-                }
-                
+                        console.log("From server to web")
+                        console.log(data['action'])
+                        console.log(data['action']=='SEND_JOKE')
+                    if (data['action'] == 'SEND_JOKE') {
+                        // Lógica específica para cuando la acción es 'SEND_JOKE'
+                        // Puedes acceder a los datos adicionales con data['data']
+                        document.getElementById('joke_display').innerHTML = data['joke'];
+                        // Puedes hacer algo más con el chiste, mostrarlo en la interfaz de usuario, etc.
+                    }else{
+                        // Lógica común para cuando 'from' es 'server' y 'to' es 'web'
+                        updateChart(data["data"]["labels"], data["data"]["humidities"], data["data"]["temperatures"]); 
+                        document.getElementById('temperature_display').innerHTML = data['temperature'];
+                        document.getElementById('humidity_display').innerHTML = data['humidity'];
+                    }
+                    
+                    } 
                 if(data['from'] == 'ESP32' && data['to'] == 'broadcast' && data['action'] == 'UPDATE_COUNTER'){
                     document.getElementById('counter_display').innerHTML = data['value'];
                 } 
